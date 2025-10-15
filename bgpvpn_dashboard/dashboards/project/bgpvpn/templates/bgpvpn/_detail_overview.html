@@ -1,13 +1,56 @@
 {% load i18n  %}
 <div class="detail">
-  <dl class="dl-horizontal">
-    <dt>{% trans "BGPVPN Name" %}</dt>
-    <dd>{{ bgpvpn.name }}</dd>
-    <dt>{% trans "BGPVPN ID" %}</dt>
-    <dd>{{ bgpvpn.id }}</dd>
-    <dt>{% trans "Type" %}</dt>
-    <dd>{{ bgpvpn.type }}</dd>
-    {% include "project/bgpvpn/_associated_networks.html" %}
-    {% include "project/bgpvpn/_associated_routers.html" %}
-  </dl>
+    <dl class="dl-horizontal">
+        <dt>{% trans "BGPVPN Name" %}</dt>
+        <dd>{{ bgpvpn.name }}</dd>
+
+        <dt>{% trans "BGPVPN ID" %}</dt>
+        <dd>{{ bgpvpn.id }}</dd>
+
+        <dt>{% trans "Type" %}</dt>
+        <dd>{{ bgpvpn.type }}</dd>
+
+        <!-- ==================== 新增 VNI 显示 ==================== -->
+        <dt>{% trans "VNI" %}</dt>
+        <dd>{{ bgpvpn.vni|default:_("N/A") }}</dd>
+        <!-- ===================================================== -->
+
+        <!-- ==================== 可选：显示 Route Targets ==================== -->
+        <dt>{% trans "Route Targets" %}</dt>
+        <dd>
+            {% if bgpvpn.route_targets %}
+            {% for rt in bgpvpn.route_targets %}
+            {{ rt }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            {% else %}
+            {% trans "None" %}
+            {% endif %}
+        </dd>
+
+        <dt>{% trans "Import Targets" %}</dt>
+        <dd>
+            {% if bgpvpn.import_targets %}
+            {% for it in bgpvpn.import_targets %}
+            {{ it }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            {% else %}
+            {% trans "None" %}
+            {% endif %}
+        </dd>
+
+        <dt>{% trans "Export Targets" %}</dt>
+        <dd>
+            {% if bgpvpn.export_targets %}
+            {% for et in bgpvpn.export_targets %}
+            {{ et }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            {% else %}
+            {% trans "None" %}
+            {% endif %}
+        </dd>
+        <!-- ============================================================== -->
+
+        {% include "project/bgpvpn/_associated_networks.html" %}
+        {% include "project/bgpvpn/_associated_routers.html" %}
+    </dl>
 </div>

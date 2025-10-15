@@ -110,5 +110,7 @@ class BgpvpnTable(project_tables.BgpvpnTable):
                        CreateNetworkAssociation,
                        CreateRouterAssociation,
                        DeleteBgpvpn)
-        columns = ("tenant_id", "name", "type", "route_targets",
+        # ==================== 列顺序包含 VNI ====================
+        columns = ("tenant_id", "name", "type", "vni", "route_targets",
                    "import_targets", "export_targets", "networks", "routers")
+        # ======================================================

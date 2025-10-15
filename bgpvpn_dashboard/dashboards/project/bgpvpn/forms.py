@@ -37,6 +37,21 @@ class CommonData(forms.SelfHandlingForm):
                            label=_("Name"),
                            required=False)
 
+    # ==================== 新增 VNI 字段 ====================
+    vni = forms.IntegerField(
+        label=_("VNI"),
+        required=False,
+        min_value=1,
+        max_value=16777215,
+        help_text=_("VXLAN Network Identifier (1-16777215). "
+                    "Required for OVN driver. Leave empty for auto-assignment "
+                    "if supported by backend."),
+        widget=forms.NumberInput(attrs={
+            'placeholder': _('e.g. 10000'),
+        })
+    )
+    # =====================================================
+
     failure_url = reverse_lazy('horizon:project:bgpvpn:index')
 
     def __init__(self, request, *args, **kwargs):
@@ -50,13 +65,24 @@ class CommonData(forms.SelfHandlingForm):
     @staticmethod
     def _del_attributes(attributes, data):
         for attribute in attributes:
-            del data[attribute]
+            if attribute in data:  # 添加检查，避免 KeyError
+                del data[attribute]
 
     def handle(self, request, data):
         params = {}
         for key in bgpvpn_common.RT_FORMAT_ATTRIBUTES:
             if key in data:
                 params[key] = bgpvpn_common.format_rt(data.pop(key, None))
+
+        # ==================== 处理 VNI 字段 ====================
+        # VNI 是整数，直接传递（如果有值）
+        if data.get('vni'):
+            params['vni'] = data.pop('vni')
+        elif 'vni' in data:
+            # 移除空的 vni 字段
+            data.pop('vni')
+        # =====================================================
+
         params.update(data)
         error_msg = _('Something went wrong with BGPVPN %s') % data['name']
         try:
@@ -65,11 +91,13 @@ class CommonData(forms.SelfHandlingForm):
                 # attribute tenant_id is required in request when admin user is
                 # logged and bgpvpn form from admin menu is used
                 if request.user.is_superuser and data.get('tenant_id'):
-                    attributes = ('bgpvpn_id', 'type', 'tenant_id')
+                    # VNI 不可修改，从参数中移除
+                    attributes = ('bgpvpn_id', 'type', 'tenant_id', 'vni')
                 # attribute tenant_id does not exist in request
                 # when non-admin user is logged
                 else:
-                    attributes = ('bgpvpn_id', 'type')
+                    # VNI 不可修改，从参数中移除
+                    attributes = ('bgpvpn_id', 'type', 'vni')
                 self._del_attributes(attributes, params)
                 bgpvpn = bgpvpn_api.bgpvpn_update(request,
                                                   data['bgpvpn_id'],
@@ -95,7 +123,17 @@ class EditDataBgpVpn(CommonData):
         attrs={'readonly': 'readonly'}))
     type = forms.CharField(label=_("Type"), widget=forms.TextInput(
         attrs={'readonly': 'readonly'}))
-    fields_order = ['name', 'bgpvpn_id', 'type']
+
+    # ==================== VNI 只读显示 ====================
+    vni = forms.IntegerField(
+        label=_("VNI"),
+        required=False,
+        widget=forms.NumberInput(attrs={'readonly': 'readonly'}),
+        help_text=_("VXLAN Network Identifier (immutable)")
+    )
+    # ==================================================
+
+    fields_order = ['name', 'bgpvpn_id', 'type', 'vni']
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)

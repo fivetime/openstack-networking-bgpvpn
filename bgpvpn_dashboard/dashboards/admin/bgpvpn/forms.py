@@ -77,8 +77,10 @@ class CreateBgpVpn(CommonData):
                              help_text=_("The type of VPN "
                                          " and the technology behind it."))
 
-    fields_order = ['name', 'tenant_id', 'type',
+    # ==================== 字段顺序包含 VNI ====================
+    fields_order = ['name', 'tenant_id', 'type', 'vni',
                     'route_targets', 'import_targets', 'export_targets']
+    # ========================================================
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
@@ -98,12 +100,22 @@ class EditDataBgpVpn(CommonData):
         attrs={'readonly': 'readonly'}))
     tenant_id = forms.CharField(widget=forms.HiddenInput())
 
-    fields_order = ['name', 'bgpvpn_id', 'tenant_id', 'type',
+    # ==================== VNI 只读显示（继承自父类） ====================
+    # 父类 project_forms.CommonData 已经定义了 vni 字段
+    # 这里只需确保在编辑时显示为只读
+    # ==============================================================
+
+    # ==================== 字段顺序包含 VNI ====================
+    fields_order = ['name', 'bgpvpn_id', 'tenant_id', 'type', 'vni',
                     'route_targets', 'import_targets', 'export_targets']
+    # ========================================================
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
         self.action = 'update'
+        # 确保 VNI 为只读
+        if 'vni' in self.fields:
+            self.fields['vni'].widget.attrs['readonly'] = 'readonly'
 
 
 class CreateNetworkAssociation(project_forms.CreateNetworkAssociation):

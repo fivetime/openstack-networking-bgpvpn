@@ -80,6 +80,13 @@ class BgpvpnTable(tables.DataTable):
                          verbose_name=_("Name"),
                          link=("horizon:project:bgpvpn:detail"))
     type = tables.Column("type", verbose_name=_("Type"))
+
+    # ==================== 新增 VNI 列 ====================
+    vni = tables.Column("vni",
+                        verbose_name=_("VNI"),
+                        empty_value=_("N/A"))
+    # ==================================================
+
     networks = NetworksColumn("networks", verbose_name=_("Networks"))
     routers = RoutersColumn("routers", verbose_name=_("Routers"))
 
