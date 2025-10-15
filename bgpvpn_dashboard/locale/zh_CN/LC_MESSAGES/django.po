@@ -1,0 +1,371 @@
+# Chinese (Simplified) translations for networking-bgpvpn
+# 简体中文翻译
+msgid ""
+msgstr ""
+"Project-Id-Version: networking-bgpvpn VERSION\n"
+"Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
+"POT-Creation-Date: 2024-12-15 10:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-12-15 10:00+0000\n"
+"Last-Translator: Your Name <your.email@example.com>\n"
+"Language-Team: Chinese (Simplified)\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid ""
+"A single BGP Route Target or a comma-separated list of BGP Route Target. "
+"Example: 64512:1 or 64512:1,64512:2,64512:3"
+msgstr ""
+"单个 BGP 路由目标或逗号分隔的 BGP 路由目标列表。"
+"示例：64512:1 或 64512:1,64512:2,64512:3"
+
+msgid "Advertise Extra Routes"
+msgstr "通告额外路由"
+
+msgid "Associate Network"
+msgstr "关联网络"
+
+msgid "Associate Router"
+msgstr "关联路由器"
+
+msgid "Associate a BGPVPN to a Network"
+msgstr "将 BGPVPN 关联到网络"
+
+msgid "Associate a BGPVPN to a Router"
+msgstr "将 BGPVPN 关联到路由器"
+
+msgid "Associated Network"
+msgstr "已关联网络"
+
+msgid "Associated Networks"
+msgstr "已关联网络"
+
+msgid "Associated Router"
+msgstr "已关联路由器"
+
+msgid "Associated Routers"
+msgstr "已关联路由器"
+
+msgid "Association ID"
+msgstr "关联 ID"
+
+msgid "BGP VPNs"
+msgstr "BGP VPN"
+
+msgid "BGPVPN"
+msgstr "BGP VPN"
+
+#, python-format
+msgid "BGPVPN %s was successfully created."
+msgstr "BGPVPN %s 已成功创建。"
+
+#, python-format
+msgid "BGPVPN %s was successfully updated."
+msgstr "BGPVPN %s 已成功更新。"
+
+msgid "BGPVPN ID"
+msgstr "BGPVPN ID"
+
+msgid "BGPVPN Interconnections"
+msgstr "BGPVPN 互联"
+
+msgid "BGPVPN Name"
+msgstr "BGPVPN 名称"
+
+msgid ""
+"Bug, inconsistency between neutron-lib and networking-bgpvpn for RTRD regex"
+msgstr ""
+"错误，neutron-lib 和 networking-bgpvpn 之间的 RTRD 正则表达式不一致"
+
+msgid "Choose a network"
+msgstr "选择网络"
+
+msgid "Choose a router"
+msgstr "选择路由器"
+
+msgid "Create"
+msgstr "创建"
+
+msgid "Create Association"
+msgstr "创建关联"
+
+msgid "Create BGPVPN"
+msgstr "创建 BGPVPN"
+
+msgid "Create Network Association"
+msgstr "创建网络关联"
+
+msgid "Create Router Association"
+msgstr "创建路由器关联"
+
+msgid "Create Router associations"
+msgstr "创建路由器关联"
+
+msgid "Create a new BGP VPN for any project as you need."
+msgstr "根据需要为任意项目创建新的 BGP VPN。"
+
+msgid "Create a new router association."
+msgstr "创建新的路由器关联。"
+
+msgid "Delete BGPVPN"
+msgid_plural "Delete BGPVPNs"
+msgstr[0] "删除 BGPVPN"
+
+msgid "Delete Network Association"
+msgid_plural "Delete Network Associations"
+msgstr[0] "删除网络关联"
+
+msgid "Delete Router Association"
+msgid_plural "Delete Router Associations"
+msgstr[0] "删除路由器关联"
+
+msgid "Deleted BGPVPN"
+msgid_plural "Deleted BGPVPNs"
+msgstr[0] "已删除 BGPVPN"
+
+msgid "Deleted Network Association"
+msgid_plural "Deleted Network Associations"
+msgstr[0] "已删除网络关联"
+
+msgid "Deleted Router Association"
+msgid_plural "Deleted Router Associations"
+msgstr[0] "已删除路由器关联"
+
+msgid "Description:"
+msgstr "描述："
+
+msgid "Edit BGPVPN"
+msgstr "编辑 BGPVPN"
+
+msgid "Export Targets"
+msgstr "导出目标"
+
+msgid "Export targets"
+msgstr "导出目标"
+
+msgid "Export targets is not valid"
+msgstr "导出目标无效"
+
+#, python-format
+msgid "Failed to create BGPVPN %s"
+msgstr "创建 BGPVPN %s 失败"
+
+#, python-format
+msgid "Failed to delete BGPVPN %s"
+msgstr "删除 BGPVPN %s 失败"
+
+#, python-format
+msgid "Failed to delete Network Association %s"
+msgstr "删除网络关联 %s 失败"
+
+#, python-format
+msgid "Failed to delete Router Association %s"
+msgstr "删除路由器关联 %s 失败"
+
+#, python-format
+msgid "Failed to update BGPVPN %s"
+msgstr "更新 BGPVPN %s 失败"
+
+msgid "ID"
+msgstr "ID"
+
+msgid "Import Targets"
+msgstr "导入目标"
+
+msgid "Import targets"
+msgstr "导入目标"
+
+msgid "Import targets is not valid"
+msgstr "导入目标无效"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "Network"
+msgstr "网络"
+
+msgid "Network Associations"
+msgstr "网络关联"
+
+msgid "Network ID"
+msgstr "网络 ID"
+
+msgid "Network Name"
+msgstr "网络名称"
+
+msgid "Network associations list can not be retrieved."
+msgstr "无法获取网络关联列表。"
+
+msgid "Networks"
+msgstr "网络"
+
+msgid "No network"
+msgstr "无网络"
+
+msgid "No router"
+msgstr "无路由器"
+
+msgid "None"
+msgstr "无"
+
+msgid "Optional Parameters"
+msgstr "可选参数"
+
+msgid "Optional parameters"
+msgstr "可选参数"
+
+msgid "Overview"
+msgstr "概览"
+
+msgid "Project"
+msgstr "项目"
+
+msgid "Project ID"
+msgstr "项目 ID"
+
+msgid "Route Targets"
+msgstr "路由目标"
+
+msgid "Route targets"
+msgstr "路由目标"
+
+msgid "Route targets is not valid"
+msgstr "路由目标无效"
+
+msgid "Router"
+msgstr "路由器"
+
+msgid "Router Associations"
+msgstr "路由器关联"
+
+msgid "Router ID"
+msgstr "路由器 ID"
+
+msgid "Router Name"
+msgstr "路由器名称"
+
+#, python-format
+msgid "Router association with \"%s\" created."
+msgstr "已创建与 \"%s\" 的路由器关联。"
+
+msgid "Router associations list can not be retrieved."
+msgstr "无法获取路由器关联列表。"
+
+msgid "Routers"
+msgstr "路由器"
+
+msgid "Select a project"
+msgstr "选择项目"
+
+#, python-format
+msgid "Something went wrong with BGPVPN %s"
+msgstr "BGPVPN %s 出现问题"
+
+msgid "The type of VPN  and the technology behind it."
+msgstr "VPN 的类型及其背后的技术。"
+
+msgid "Type"
+msgstr "类型"
+
+#, python-format
+msgid "Unable to associate network \"%s\"."
+msgstr "无法关联网络 \"%s\"。"
+
+#, python-format
+msgid "Unable to associate router %s"
+msgstr "无法关联路由器 %s"
+
+#, python-format
+msgid "Unable to create a router association with \"%s\"."
+msgstr "无法创建与 \"%s\" 的路由器关联。"
+
+msgid "Unable to retrieve BGPVPN details."
+msgstr "无法获取 BGPVPN 详情。"
+
+msgid "Unable to retrieve Router Association details."
+msgstr "无法获取路由器关联详情。"
+
+#, python-format
+msgid "Unable to retrieve details for bgpvpn \"%s\"."
+msgstr "无法获取 BGPVPN \"%s\" 的详情。"
+
+#, python-format
+msgid "Unable to retrieve information about the tenant %s"
+msgstr "无法获取租户 %s 的信息"
+
+msgid "Unable to retrieve network association details."
+msgstr "无法获取网络关联详情。"
+
+msgid "Unable to retrieve network details."
+msgstr "无法获取网络详情。"
+
+msgid "Unable to retrieve networks."
+msgstr "无法获取网络。"
+
+msgid "Unable to retrieve router association details."
+msgstr "无法获取路由器关联详情。"
+
+msgid "Unable to retrieve router details."
+msgstr "无法获取路由器详情。"
+
+msgid "Unable to retrieve routers"
+msgstr "无法获取路由器"
+
+#, python-format
+msgid "Unsupported action type: %s"
+msgstr "不支持的操作类型：%s"
+
+msgid "Update"
+msgstr "更新"
+
+msgid "Update BGPVPN"
+msgstr "更新 BGPVPN"
+
+msgid "Update BGPVPN Router Association"
+msgstr "更新 BGPVPN 路由器关联"
+
+msgid "Update BGPVPN Router Associations"
+msgstr "更新 BGPVPN 路由器关联"
+
+msgid "Update Change"
+msgstr "更新更改"
+
+msgid "Update Router Association"
+msgstr "更新路由器关联"
+
+msgid "You may update the editable properties of your BGP VPN here."
+msgstr "您可以在此更新 BGP VPN 的可编辑属性。"
+
+msgid ""
+"You may update the editable properties of your BGPVPN Router Association "
+"here."
+msgstr ""
+"您可以在此更新 BGPVPN 路由器关联的可编辑属性。"
+
+msgid "l2"
+msgstr "L2 (二层)"
+
+msgid "l3"
+msgstr "L3 (三层)"
+
+# ==================== 新增 VNI 相关翻译 ====================
+msgid "VNI"
+msgstr "VNI"
+
+msgid "VXLAN Network Identifier (1-16777215). Required for OVN driver. Leave empty for auto-assignment if supported by backend."
+msgstr "VXLAN 网络标识符 (1-16777215)。OVN 驱动需要。如果后端支持，可留空以自动分配。"
+
+msgid "VXLAN Network Identifier (immutable)"
+msgstr "VXLAN 网络标识符（不可修改）"
+
+msgid "e.g. 10000"
+msgstr "例如：10000"
+
+msgid "N/A"
+msgstr "不适用"
+
+msgid "VXLAN Network Identifier (required for OVN)"
+msgstr "VXLAN 网络标识符（OVN 驱动必需）"
+# ==========================================================
