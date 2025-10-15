@@ -28,16 +28,18 @@ class BGPVPN(neutron.NeutronResource):
 
     required_service_extension = 'bgpvpn'
 
+    # ==================== 添加 VNI 到属性列表 ====================
     PROPERTIES = (
         NAME, TYPE, DESCRIPTION, ROUTE_DISTINGUISHERS,
         IMPORT_TARGETS, EXPORT_TARGETS, ROUTE_TARGETS,
-        TENANT_ID, LOCAL_PREF
+        TENANT_ID, VNI, LOCAL_PREF
     ) = (
         'name', 'type', 'description',
         'route_distinguishers', 'import_targets',
         'export_targets', 'route_targets',
-        'tenant_id', 'local_pref'
+        'tenant_id', 'vni', 'local_pref'
     )
+    # ===========================================================
 
     ATTRIBUTES = (
         SHOW, STATUS
@@ -73,6 +75,17 @@ class BGPVPN(neutron.NeutronResource):
                 constraints.CustomConstraint('keystone.project')
             ]
         ),
+        # ==================== 新增 VNI 属性定义 ====================
+        VNI: properties.Schema(
+            properties.Schema.INTEGER,
+            description=_('VXLAN Network Identifier for EVPN. Required for '
+                          'OVN driver when using EVPN/VXLAN encapsulation.'),
+            required=False,
+            constraints=[
+                constraints.Range(1, 16777215),
+            ],
+        ),
+        # =========================================================
         ROUTE_DISTINGUISHERS: properties.Schema(
             properties.Schema.LIST,
             _('List of RDs that will be used to advertize BGPVPN routes.'),
@@ -101,6 +114,7 @@ class BGPVPN(neutron.NeutronResource):
             properties.Schema.INTEGER,
             description=_('Default value of the BGP LOCAL_PREF for the '
                           'route advertisement to this BGPVPN.'),
+            required=False,
             constraints=[
                 constraints.Range(0, 2 ** 32 - 1),
             ],
@@ -124,6 +138,12 @@ class BGPVPN(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
+        # ==================== 处理 VNI ====================
+        # remove vni if unset, to let Neutron handle it
+        if (self.VNI in props and props[self.VNI] is None):
+            del props[self.VNI]
+        # ================================================
+
         # remove local-pref if unset, to let Neutron set a default
         if (self.LOCAL_PREF in props and props[self.LOCAL_PREF] is None):
             del props[self.LOCAL_PREF]
@@ -137,7 +157,21 @@ class BGPVPN(neutron.NeutronResource):
         self.resource_id_set(bgpvpn['bgpvpn']['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        raise NotImplementedError()
+        # ==================== VNI 不可修改 ====================
+        # VNI is immutable - if it's in prop_diff, reject the update
+        if self.VNI in prop_diff:
+            raise exception.UpdateReplace(self.name)
+        # ====================================================
+
+        # LOCAL_PREF is also immutable
+        if self.LOCAL_PREF in prop_diff:
+            raise exception.UpdateReplace(self.name)
+
+        # Other properties can be updated
+        if prop_diff:
+            self.neutron().update_bgpvpn(
+                self.resource_id,
+                {'bgpvpn': prop_diff})
 
     def handle_delete(self):
         try:
@@ -460,7 +494,7 @@ class BGPVPNPortAssoc(neutron.NeutronResource):
         self.props = self.prepare_properties(self.properties,
                                              self.physical_resource_name())
 
-        # clean-up/preparethe routes
+        # clean-up/prepare the routes
         for route in self.props.get('routes', []):
             # remove local-pref if unset, to let Neutron set a default
             if (self.LOCAL_PREF in route and route[self.LOCAL_PREF] is None):
