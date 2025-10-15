@@ -33,11 +33,13 @@ LOG = logging.getLogger(__name__)
 
 class CommonData(forms.SelfHandlingForm):
     fields_order = []
-    name = forms.CharField(max_length=255,
-                           label=_("Name"),
-                           required=False)
 
-    # ==================== 新增 VNI 字段 ====================
+    name = forms.CharField(
+        max_length=255,
+        label=_("Name"),
+        required=False)
+
+    # VNI field
     vni = forms.IntegerField(
         label=_("VNI"),
         required=False,
@@ -48,9 +50,19 @@ class CommonData(forms.SelfHandlingForm):
                     "if supported by backend."),
         widget=forms.NumberInput(attrs={
             'placeholder': _('e.g. 10000'),
-        })
-    )
-    # =====================================================
+        }))
+
+    # Local Preference field
+    local_pref = forms.IntegerField(
+        label=_("Local Preference"),
+        required=False,
+        min_value=0,
+        max_value=4294967295,
+        help_text=_("BGP Local Preference value (0-4294967295). "
+                    "Higher values are preferred."),
+        widget=forms.NumberInput(attrs={
+            'placeholder': _('e.g. 100'),
+        }))
 
     failure_url = reverse_lazy('horizon:project:bgpvpn:index')
 
@@ -65,39 +77,41 @@ class CommonData(forms.SelfHandlingForm):
     @staticmethod
     def _del_attributes(attributes, data):
         for attribute in attributes:
-            if attribute in data:  # 添加检查，避免 KeyError
+            if attribute in data:
                 del data[attribute]
 
     def handle(self, request, data):
         params = {}
+
+        # Process Route Targets formatting
         for key in bgpvpn_common.RT_FORMAT_ATTRIBUTES:
             if key in data:
                 params[key] = bgpvpn_common.format_rt(data.pop(key, None))
 
-        # ==================== 处理 VNI 字段 ====================
-        # VNI 是整数，直接传递（如果有值）
+        # Process VNI
         if data.get('vni'):
             params['vni'] = data.pop('vni')
         elif 'vni' in data:
-            # 移除空的 vni 字段
             data.pop('vni')
-        # =====================================================
+
+        # Process local_pref
+        if data.get('local_pref') is not None:
+            params['local_pref'] = data.pop('local_pref')
+        elif 'local_pref' in data:
+            data.pop('local_pref')
 
         params.update(data)
         error_msg = _('Something went wrong with BGPVPN %s') % data['name']
+
         try:
             if self.action == 'update':
                 error_msg = _('Failed to update BGPVPN %s') % data['name']
-                # attribute tenant_id is required in request when admin user is
-                # logged and bgpvpn form from admin menu is used
                 if request.user.is_superuser and data.get('tenant_id'):
-                    # VNI 不可修改，从参数中移除
-                    attributes = ('bgpvpn_id', 'type', 'tenant_id', 'vni')
-                # attribute tenant_id does not exist in request
-                # when non-admin user is logged
+                    # VNI and local_pref are immutable
+                    attributes = ('bgpvpn_id', 'type', 'tenant_id',
+                                  'vni', 'local_pref')
                 else:
-                    # VNI 不可修改，从参数中移除
-                    attributes = ('bgpvpn_id', 'type', 'vni')
+                    attributes = ('bgpvpn_id', 'type', 'vni', 'local_pref')
                 self._del_attributes(attributes, params)
                 bgpvpn = bgpvpn_api.bgpvpn_update(request,
                                                   data['bgpvpn_id'],
@@ -110,6 +124,7 @@ class CommonData(forms.SelfHandlingForm):
             else:
                 raise Exception(
                     _('Unsupported action type: %s') % self.action)
+
             LOG.debug(msg)
             messages.success(request, msg)
             return bgpvpn
@@ -119,21 +134,29 @@ class CommonData(forms.SelfHandlingForm):
 
 
 class EditDataBgpVpn(CommonData):
-    bgpvpn_id = forms.CharField(label=_("ID"), widget=forms.TextInput(
-        attrs={'readonly': 'readonly'}))
-    type = forms.CharField(label=_("Type"), widget=forms.TextInput(
-        attrs={'readonly': 'readonly'}))
+    bgpvpn_id = forms.CharField(
+        label=_("ID"),
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
-    # ==================== VNI 只读显示 ====================
+    type = forms.CharField(
+        label=_("Type"),
+        widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+
+    # VNI - read only
     vni = forms.IntegerField(
         label=_("VNI"),
         required=False,
         widget=forms.NumberInput(attrs={'readonly': 'readonly'}),
-        help_text=_("VXLAN Network Identifier (immutable)")
-    )
-    # ==================================================
+        help_text=_("VXLAN Network Identifier (immutable)"))
 
-    fields_order = ['name', 'bgpvpn_id', 'type', 'vni']
+    # Local Preference - read only
+    local_pref = forms.IntegerField(
+        label=_("Local Preference"),
+        required=False,
+        widget=forms.NumberInput(attrs={'readonly': 'readonly'}),
+        help_text=_("BGP Local Preference (immutable)"))
+
+    fields_order = ['name', 'bgpvpn_id', 'type', 'vni', 'local_pref']
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
@@ -149,11 +172,8 @@ class CreateNetworkAssociation(forms.SelfHandlingForm):
             transform=lambda x: "%s" % x.name_or_id))
 
     def __init__(self, request, *args, **kwargs):
-        super().__init__(
-            request, *args, **kwargs)
+        super().__init__(request, *args, **kwargs)
 
-        # when an admin user uses the project panel BGPVPN, there is no
-        # project in data because bgpvpn_get doesn't return it
         project_id = kwargs.get('initial', {}).get("project_id", None)
         if request.user.is_superuser and project_id:
             tenant_id = project_id

@@ -74,18 +74,21 @@ class RoutersColumn(tables.Column):
         routers = [get_router_url(router) for router in bgpvpn.routers]
         return safestring.mark_safe(', '.join(routers))
 
-
 class BgpvpnTable(tables.DataTable):
     name = tables.Column("name_or_id",
                          verbose_name=_("Name"),
                          link=("horizon:project:bgpvpn:detail"))
     type = tables.Column("type", verbose_name=_("Type"))
 
-    # ==================== 新增 VNI 列 ====================
+    # VNI column
     vni = tables.Column("vni",
                         verbose_name=_("VNI"),
                         empty_value=_("N/A"))
-    # ==================================================
+
+    # Local Preference column
+    local_pref = tables.Column("local_pref",
+                               verbose_name=_("Local Preference"),
+                               empty_value=_("N/A"))
 
     networks = NetworksColumn("networks", verbose_name=_("Networks"))
     routers = RoutersColumn("routers", verbose_name=_("Routers"))

@@ -3,19 +3,23 @@
 <div class="detail">
     <dl class="dl-horizontal">
         <dt>{% trans "BGPVPN Name" %}</dt>
-        <dd>{{ bgpvpn.name }}</dd>
+        <dd>{{ bgpvpn.name|default:_("N/A") }}</dd>
 
         <dt>{% trans "BGPVPN ID" %}</dt>
         <dd>{{ bgpvpn.id }}</dd>
 
         <dt>{% trans "Type" %}</dt>
-        <dd>{{ bgpvpn.type }}</dd>
+        <dd>{{ bgpvpn.type|upper }}</dd>
 
-        <!-- ==================== 新增 VNI 显示 ==================== -->
+        <!-- VNI -->
         <dt>{% trans "VNI" %}</dt>
         <dd>{{ bgpvpn.vni|default:_("N/A") }}</dd>
-        <!-- ===================================================== -->
 
+        <!-- Local Preference -->
+        <dt>{% trans "Local Preference" %}</dt>
+        <dd>{{ bgpvpn.local_pref|default:_("N/A") }}</dd>
+
+        <!-- Route Targets -->
         <dt>{% trans "Route Targets" %}</dt>
         <dd>
             {% if bgpvpn.route_targets %}
@@ -43,6 +47,18 @@
             {% if bgpvpn.export_targets %}
             {% for et in bgpvpn.export_targets %}
             {{ et }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            {% else %}
+            {% trans "None" %}
+            {% endif %}
+        </dd>
+
+        <!-- Route Distinguishers -->
+        <dt>{% trans "Route Distinguishers" %}</dt>
+        <dd>
+            {% if bgpvpn.route_distinguishers %}
+            {% for rd in bgpvpn.route_distinguishers %}
+            {{ rd }}{% if not forloop.last %}, {% endif %}
             {% endfor %}
             {% else %}
             {% trans "None" %}

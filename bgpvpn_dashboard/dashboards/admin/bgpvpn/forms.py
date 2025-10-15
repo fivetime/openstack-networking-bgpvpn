@@ -62,6 +62,16 @@ class CommonData(project_forms.CommonData):
         required=False,
         help_text=bgpvpn_common.ROUTE_TARGET_HELP + ' To use only on export.')
 
+    # Route Distinguishers field
+    route_distinguishers = forms.CharField(
+        max_length=255,
+        validators=[RegexValidator(regex=RTRDS_REGEX,
+                                   message=_("Route distinguishers is not valid"))],
+        label=_("Route Distinguishers"),
+        required=False,
+        help_text=_("Comma-separated list of Route Distinguishers. "
+                    "Example: 65000:1, 65000:2"))
+
     failure_url = reverse_lazy('horizon:admin:bgpvpn:index')
 
     def __init__(self, request, *args, **kwargs):
@@ -77,10 +87,9 @@ class CreateBgpVpn(CommonData):
                              help_text=_("The type of VPN "
                                          " and the technology behind it."))
 
-    # ==================== 字段顺序包含 VNI ====================
-    fields_order = ['name', 'tenant_id', 'type', 'vni',
-                    'route_targets', 'import_targets', 'export_targets']
-    # ========================================================
+    fields_order = ['name', 'tenant_id', 'type', 'vni', 'local_pref',
+                    'route_targets', 'import_targets', 'export_targets',
+                    'route_distinguishers']
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
@@ -100,22 +109,18 @@ class EditDataBgpVpn(CommonData):
         attrs={'readonly': 'readonly'}))
     tenant_id = forms.CharField(widget=forms.HiddenInput())
 
-    # ==================== VNI 只读显示（继承自父类） ====================
-    # 父类 project_forms.CommonData 已经定义了 vni 字段
-    # 这里只需确保在编辑时显示为只读
-    # ==============================================================
-
-    # ==================== 字段顺序包含 VNI ====================
     fields_order = ['name', 'bgpvpn_id', 'tenant_id', 'type', 'vni',
-                    'route_targets', 'import_targets', 'export_targets']
-    # ========================================================
+                    'local_pref', 'route_targets', 'import_targets',
+                    'export_targets', 'route_distinguishers']
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(request, *args, **kwargs)
         self.action = 'update'
-        # 确保 VNI 为只读
+        # Make VNI and local_pref read-only
         if 'vni' in self.fields:
             self.fields['vni'].widget.attrs['readonly'] = 'readonly'
+        if 'local_pref' in self.fields:
+            self.fields['local_pref'].widget.attrs['readonly'] = 'readonly'
 
 
 class CreateNetworkAssociation(project_forms.CreateNetworkAssociation):

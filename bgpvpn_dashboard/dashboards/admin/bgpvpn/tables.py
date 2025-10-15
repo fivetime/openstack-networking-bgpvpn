@@ -84,6 +84,11 @@ def get_export_targets(bgpvpn):
     return ', '.join(et for et in bgpvpn.export_targets)
 
 
+def get_route_distinguishers(bgpvpn):
+    rds = bgpvpn.get('route_distinguishers', [])
+    return ', '.join(rd for rd in rds) if rds else _("N/A")
+
+
 def get_network_url(network):
     url = reverse('horizon:admin:networks:detail', args=[network.id])
     instance = '<a href={}>{}</a>'.format(url, html.escape(network.name_or_id))
@@ -103,6 +108,8 @@ class BgpvpnTable(project_tables.BgpvpnTable):
                                    verbose_name=_("Import Targets"))
     export_targets = tables.Column(get_export_targets,
                                    verbose_name=_("Export Targets"))
+    route_distinguishers = tables.Column(get_route_distinguishers,
+                                         verbose_name=_("Route Distinguishers"))
 
     class Meta:
         table_actions = (CreateBgpVpn, DeleteBgpvpn)
@@ -110,7 +117,6 @@ class BgpvpnTable(project_tables.BgpvpnTable):
                        CreateNetworkAssociation,
                        CreateRouterAssociation,
                        DeleteBgpvpn)
-        # ==================== 列顺序包含 VNI ====================
-        columns = ("tenant_id", "name", "type", "vni", "route_targets",
-                   "import_targets", "export_targets", "networks", "routers")
-        # ======================================================
+        columns = ("tenant_id", "name", "type", "vni", "local_pref",
+                   "route_targets", "import_targets", "export_targets",
+                   "route_distinguishers", "networks", "routers")
