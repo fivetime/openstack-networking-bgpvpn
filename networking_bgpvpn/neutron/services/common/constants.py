@@ -24,3 +24,13 @@ UINT16_REGEX = bgpvpn.UINT16_REGEX
 UINT8_REGEX = bgpvpn.UINT8_REGEX
 IP4_REGEX = bgpvpn.IP4_REGEX
 RTRD_REGEX = bgpvpn.RTRD_REGEX
+
+# OVN external_ids keys
+OVN_EVPN_TYPE_EXT_ID_KEY = 'neutron_bgpvpn:evpn_type'
+OVN_EVPN_VNI_EXT_ID_KEY = 'neutron_bgpvpn:vni'
+OVN_EVPN_AS_EXT_ID_KEY = 'neutron_bgpvpn:as'
+OVN_EVPN_RT_EXT_ID_KEY = 'neutron_bgpvpn:route_targets'
+OVN_EVPN_IRT_EXT_ID_KEY = 'neutron_bgpvpn:import_targets'
+OVN_EVPN_ERT_EXT_ID_KEY = 'neutron_bgpvpn:export_targets'
+OVN_EVPN_RD_EXT_ID_KEY = 'neutron_bgpvpn:route_distinguishers'
+OVN_EVPN_LOCAL_PREF_EXT_ID_KEY = 'neutron_bgpvpn:local_pref'
