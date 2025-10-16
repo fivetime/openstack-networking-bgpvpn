@@ -140,8 +140,7 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
 
         # Update all associated networks
         for network_id in new_bgpvpn.get('networks', []):
-            self.ovn_client.update_logical_switch_evpn_config(
-                context, network_id, new_bgpvpn)
+            self._update_network_evpn_config(context, network_id, new_bgpvpn)
 
         # Update all associated routers (affects their connected networks)
         for router_id in new_bgpvpn.get('routers', []):
@@ -154,8 +153,7 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
 
         # Remove config from associated networks
         for network_id in bgpvpn.get('networks', []):
-            self.ovn_client.clear_logical_switch_evpn_config(
-                context, network_id)
+            self._clear_network_evpn_config(context, network_id)
 
         # Remove config from router-connected networks
         for router_id in bgpvpn.get('routers', []):
@@ -170,26 +168,24 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
     # =========================================================================
 
     def create_net_assoc_postcommit(self, context, net_assoc):
-        """Apply EVPN configuration to Logical_Switch in OVN NB"""
+        """Apply EVPN configuration to network in OVN NB"""
         bgpvpn = self.get_bgpvpn(context, net_assoc['bgpvpn_id'])
         network_id = net_assoc['network_id']
 
         LOG.info("Creating network association: BGPVPN %s <-> Network %s",
                  bgpvpn['id'], network_id)
 
-        self.ovn_client.update_logical_switch_evpn_config(
-            context, network_id, bgpvpn)
+        self._update_network_evpn_config(context, network_id, bgpvpn)
 
     def delete_net_assoc_precommit(self, context, net_assoc):
-        """Remove EVPN configuration from Logical_Switch"""
+        """Remove EVPN configuration from network"""
         network_id = net_assoc['network_id']
 
         LOG.info("Deleting network association for network %s", network_id)
 
         # Check if network is still associated via router
         if not self._network_has_router_bgpvpn(context, network_id):
-            self.ovn_client.clear_logical_switch_evpn_config(
-                context, network_id)
+            self._clear_network_evpn_config(context, network_id)
 
     def delete_net_assoc_postcommit(self, context, net_assoc):
         """Post-deletion cleanup"""
@@ -280,8 +276,7 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
             # Check if router has BGPVPN association
             bgpvpn = self._get_router_bgpvpn(context, router_id)
             if bgpvpn:
-                self.ovn_client.update_logical_switch_evpn_config(
-                    context, network_id, bgpvpn)
+                self._update_network_evpn_config(context, network_id, bgpvpn)
 
         except Exception as e:
             _log_callback_processing_exception(resource, event, trigger,
@@ -305,8 +300,7 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
 
             # Only clear if no other BGPVPN associations exist
             if not self._network_has_bgpvpn(context, network_id):
-                self.ovn_client.clear_logical_switch_evpn_config(
-                    context, network_id)
+                self._clear_network_evpn_config(context, network_id)
 
         except Exception as e:
             _log_callback_processing_exception(
@@ -314,8 +308,57 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
                 {'subnet_id': subnet_id, 'router_id': router_id}, e)
 
     # =========================================================================
-    # Helper methods
+    # Helper methods for updating OVN
     # =========================================================================
+
+    def _update_network_evpn_config(self, context, network_id, bgpvpn):
+        """Apply EVPN config to network (Logical_Switch + Port_Bindings)"""
+        # Update Logical_Switch
+        self.ovn_client.update_logical_switch_evpn_config(
+            context, network_id, bgpvpn)
+
+        # Update Port_Bindings for router interface ports
+        self._update_router_ports_evpn_config(context, network_id, bgpvpn)
+
+    def _clear_network_evpn_config(self, context, network_id):
+        """Remove EVPN config from network"""
+        self.ovn_client.clear_logical_switch_evpn_config(context, network_id)
+        self._clear_router_ports_evpn_config(context, network_id)
+
+    def _update_router_ports_evpn_config(self, context, network_id, bgpvpn):
+        """Update Port_Binding external_ids for router interface ports
+
+        The OVN BGP Agent monitors Port_Binding external_ids, so we need
+        to set neutron_bgpvpn:* fields on router interface ports.
+        """
+        plugin = directory.get_plugin()
+
+        # Get router interface ports on this network
+        filters = {
+            'network_id': [network_id],
+            'device_owner': [const.DEVICE_OWNER_ROUTER_INTF]
+        }
+        ports = plugin.get_ports(context, filters=filters)
+
+        LOG.debug("Updating %d router interface ports on network %s",
+                  len(ports), network_id)
+
+        for port in ports:
+            self.ovn_client.update_port_binding_evpn_config(
+                context, port['id'], bgpvpn)
+
+    def _clear_router_ports_evpn_config(self, context, network_id):
+        """Clear EVPN config from router interface ports"""
+        plugin = directory.get_plugin()
+
+        filters = {
+            'network_id': [network_id],
+            'device_owner': [const.DEVICE_OWNER_ROUTER_INTF]
+        }
+        ports = plugin.get_ports(context, filters=filters)
+
+        for port in ports:
+            self.ovn_client.clear_port_binding_evpn_config(context, port['id'])
 
     def _update_router_evpn_config(self, context, router_id, bgpvpn):
         """Apply EVPN config to all networks connected to router"""
@@ -330,10 +373,12 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
         }
         router_ports = plugin.get_ports(context, filters=filters)
 
+        LOG.debug("Updating EVPN config for %d networks via router %s",
+                  len(router_ports), router_id)
+
         for port in router_ports:
             network_id = port['network_id']
-            self.ovn_client.update_logical_switch_evpn_config(
-                context, network_id, bgpvpn)
+            self._update_network_evpn_config(context, network_id, bgpvpn)
 
     def _clear_router_evpn_config(self, context, router_id):
         """Remove EVPN config from router-connected networks"""
@@ -348,8 +393,11 @@ class OVNBGPVPNDriver(driver_api.BGPVPNDriverRC):
             network_id = port['network_id']
             # Only clear if no direct network association exists
             if not self._network_has_direct_bgpvpn(context, network_id):
-                self.ovn_client.clear_logical_switch_evpn_config(
-                    context, network_id)
+                self._clear_network_evpn_config(context, network_id)
+
+    # =========================================================================
+    # Helper methods for BGPVPN lookups
+    # =========================================================================
 
     def _get_router_bgpvpn(self, context, router_id):
         """Get BGPVPN associated with router (if any)"""
