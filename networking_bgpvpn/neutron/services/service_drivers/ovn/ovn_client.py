@@ -23,8 +23,8 @@ import json
 
 from neutron_lib.api.definitions import bgpvpn_routes_control as bgpvpn_rc_def
 from neutron_lib.api.definitions import bgpvpn_vni as bgpvpn_vni_def
-from neutron_lib.plugins import directory
 
+from oslo_config import cfg
 from oslo_log import log as logging
 
 from networking_bgpvpn.neutron.services.common import constants as svc_const
@@ -43,21 +43,31 @@ class OVNClient:
     def _nb_idl(self):
         """Lazy initialization of OVN NB IDL connection"""
         if self._ovn_nb_idl is None:
-            # Get the OVN NB IDL from the ML2/OVN mechanism driver
             try:
                 from neutron.plugins.ml2.drivers.ovn.mech_driver.ovsdb \
                     import impl_idl_ovn
-                # Get the singleton instance
-                self._ovn_nb_idl = impl_idl_ovn.OvnNbIdlForLb.get_instance()
-            except ImportError:
-                # Fallback: try to get from the core plugin
-                plugin = directory.get_plugin()
-                if hasattr(plugin, '_nb_ovn'):
-                    self._ovn_nb_idl = plugin._nb_ovn
-                else:
-                    raise RuntimeError(
-                        "Cannot find OVN NB IDL connection. "
-                        "Ensure ML2/OVN plugin is loaded.")
+
+                # Method 1: Try to get from global singleton
+                try:
+                    idls = impl_idl_ovn.get_ovn_idls(None, trigger=None)
+                    self._ovn_nb_idl = idls[0]  # NB IDL is first
+                    LOG.debug("Got OVN NB IDL from get_ovn_idls()")
+                except Exception as e:
+                    LOG.debug("Failed to get IDL from get_ovn_idls: %s", e)
+
+                    # Method 2: Create new connection from config
+                    nb_conn = cfg.CONF.ovn.ovn_nb_connection
+                    LOG.info("Creating OVN NB IDL connection to %s", nb_conn)
+                    self._ovn_nb_idl = impl_idl_ovn.OvsdbNbOvnIdl.from_server(
+                        nb_conn, 'OVN_Northbound')
+
+            except Exception as e:
+                LOG.error("Failed to initialize OVN NB IDL: %s", e)
+                raise RuntimeError(
+                    "Cannot find OVN NB IDL connection. "
+                    "Ensure ML2/OVN plugin is loaded and ovn_nb_connection "
+                    "is configured correctly.") from e
+
         return self._ovn_nb_idl
 
     def _get_logical_switch(self, context, network_id):
