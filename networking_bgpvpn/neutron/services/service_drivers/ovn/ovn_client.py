@@ -23,8 +23,8 @@ import json
 
 from neutron_lib.api.definitions import bgpvpn_routes_control as bgpvpn_rc_def
 from neutron_lib.api.definitions import bgpvpn_vni as bgpvpn_vni_def
+from neutron_lib.plugins import directory
 
-from oslo_config import cfg
 from oslo_log import log as logging
 
 from networking_bgpvpn.neutron.services.common import constants as svc_const
@@ -43,30 +43,40 @@ class OVNClient:
     def _nb_idl(self):
         """Lazy initialization of OVN NB IDL connection"""
         if self._ovn_nb_idl is None:
-            try:
-                from neutron.plugins.ml2.drivers.ovn.mech_driver.ovsdb \
-                    import impl_idl_ovn
+            LOG.info("Initializing OVN NB IDL connection")
 
-                # Method 1: Try to get from global singleton
-                try:
-                    idls = impl_idl_ovn.get_ovn_idls(None, trigger=None)
-                    self._ovn_nb_idl = idls[0]  # NB IDL is first
-                    LOG.debug("Got OVN NB IDL from get_ovn_idls()")
-                except Exception as e:
-                    LOG.debug("Failed to get IDL from get_ovn_idls: %s", e)
+            # Get ML2 plugin
+            plugin = directory.get_plugin()
+            if not plugin:
+                raise RuntimeError("Neutron core plugin not loaded")
 
-                    # Method 2: Create new connection from config
-                    nb_conn = cfg.CONF.ovn.ovn_nb_connection
-                    LOG.info("Creating OVN NB IDL connection to %s", nb_conn)
-                    self._ovn_nb_idl = impl_idl_ovn.OvsdbNbOvnIdl.from_server(
-                        nb_conn, 'OVN_Northbound')
+            LOG.debug("Got plugin: %s", type(plugin))
 
-            except Exception as e:
-                LOG.error("Failed to initialize OVN NB IDL: %s", e)
+            # Get OVN mechanism driver
+            if not hasattr(plugin, 'mechanism_manager'):
+                raise RuntimeError("Plugin does not have mechanism_manager")
+
+            ovn_driver = None
+            for name, driver in plugin.mechanism_manager.mech_drivers.items():
+                LOG.debug("Checking mechanism driver: %s", name)
+                # Check if this is OVN driver by looking for nb_ovn attribute
+                if hasattr(driver.obj, 'nb_ovn') and hasattr(driver.obj, 'sb_ovn'):
+                    # Additional check: ensure it's actually OVN driver
+                    driver_class = driver.obj.__class__.__name__
+                    if 'OVN' in driver_class:
+                        ovn_driver = driver.obj
+                        LOG.info("Found OVN mechanism driver: %s (class: %s)",
+                                 name, driver_class)
+                        break
+
+            if not ovn_driver:
                 raise RuntimeError(
-                    "Cannot find OVN NB IDL connection. "
-                    "Ensure ML2/OVN plugin is loaded and ovn_nb_connection "
-                    "is configured correctly.") from e
+                    "OVN mechanism driver not found. "
+                    "Ensure ML2/OVN is configured in mechanism_drivers")
+
+            # Use the driver's nb_ovn IDL
+            self._ovn_nb_idl = ovn_driver.nb_ovn
+            LOG.info("Successfully got OVN NB IDL: %s", type(self._ovn_nb_idl))
 
         return self._ovn_nb_idl
 
